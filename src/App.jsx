@@ -7,6 +7,7 @@ function App() {
   const [documents, setDocuments] = useState(incomingDocuments);
   const [rfis, setRfis] = useState(projectRFIs); 
   const [issues, setIssues] = useState(siteIssues); 
+  const [newRfiSubject, setNewRfiSubject] = useState(' ');
 
   // 🧮 THE CALCULATOR: Automatically counting our live metrics
   const pendingDocsCount = documents.filter(doc => doc.status === 'Pending Routing').length;
@@ -40,6 +41,30 @@ function App() {
     });
     setIssues(updatedIssues);
   }
+
+  // Engine for Creating a New RFI
+  function submitNewRfi() {
+    // 1. If the scratchpad is empty, don't do anything!
+    if (newRfiSubject.trim() === '') return;
+
+    // 2. Create the new RFI Object (The new Manila Folder)
+    const newRfiObject = {
+      id: `RFI-09${rfis.length + 1}`, // Generate a fake ID (e.g., RFI-094)
+      subject: newRfiSubject,         // Grab the exact text from the Scratchpad!
+      contractor: "Site Inspector",
+      discipline: "General",
+      status: "Open",
+      dateSubmitted: "2026-02-23"
+    };
+
+    // 3. Put the new folder into the main filing cabinet
+    // The [...rfis] part means "keep all the old RFIs, and add this new one to the end"
+    setRfis([...rfis, newRfiObject]);
+
+    // 4. Erase the scratchpad so the input box goes blank again
+    setNewRfiSubject('');
+  }
+
 
   return (
     <div style={{ display: 'flex', height: '100vh', backgroundColor: '#f3f4f6', fontFamily: 'system-ui' }}>
@@ -118,6 +143,40 @@ function App() {
         {/* --- CONDITIONAL RENDER: RFIs --- */}
         {activeTab === 'rfis' && (
           <div style={{ display: 'flex', flexDirection: 'column', gap: '15px', marginTop: '30px' }}>
+            {/* THE NEW RFI FORM AREA */}
+          <div style={{ backgroundColor: 'white', padding: '20px', borderRadius: '8px', marginBottom: '20px', border: '1px solid #e5e7eb' }}>
+            <h3 style={{ marginTop: '0' }}>Create New RFI</h3>
+            
+            <input 
+              type="text" 
+              placeholder="What is the issue on site?" 
+              value={newRfiSubject} 
+              onChange={(event) => setNewRfiSubject(event.target.value)} 
+              style={{ width: '100%', padding: '10px', borderRadius: '4px', border: '1px solid #d1d5db', marginBottom: '10px' }}
+            />
+            
+            {/* This paragraph is just to prove our Scratchpad is working! */}
+ {/* THE NEW RFI FORM AREA */}
+          <div style={{ backgroundColor: 'white', padding: '20px', borderRadius: '8px', marginBottom: '20px', border: '1px solid #e5e7eb' }}>
+            <h3 style={{ marginTop: '0' }}>Create New RFI</h3>
+            
+            <input 
+              type="text" 
+              placeholder="What is the issue on site?" 
+              value={newRfiSubject} 
+              onChange={(event) => setNewRfiSubject(event.target.value)} 
+              style={{ width: '100%', padding: '10px', borderRadius: '4px', border: '1px solid #d1d5db', marginBottom: '10px' }}
+            />
+            
+            {/* THE NEW BUTTON THAT REPLACED THE PARAGRAPH 👇 */}
+            <button 
+              onClick={submitNewRfi} 
+              style={{ padding: '10px 15px', backgroundColor: '#3b82f6', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer', fontWeight: 'bold' }}>
+              Submit New RFI
+            </button>
+
+          </div>
+          </div>
             {rfis.map(rfi => (
               <div key={rfi.id} style={{ backgroundColor: 'white', padding: '20px', borderRadius: '8px', borderLeft: rfi.status === 'Open' ? '5px solid #ef4444' : '5px solid #10b981', boxShadow: '0 2px 4px rgba(0,0,0,0.05)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                 <div>

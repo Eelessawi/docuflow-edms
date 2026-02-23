@@ -20,6 +20,12 @@ export const incomingDocuments = [
     discipline: "Finance",
     type: "Invoice",
     status: "Pending Routing"
+  },
+  {
+    id: "ARCH-999",
+    title: "Lobby Floor Plan",
+    discipline: "Architectural",
+    status: "Pending Routing"
   }
 ];
 // The new RFI Database
