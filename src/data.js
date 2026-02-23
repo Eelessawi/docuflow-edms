@@ -22,3 +22,30 @@ export const incomingDocuments = [
     status: "Pending Routing"
   }
 ];
+// The new RFI Database
+export const projectRFIs = [
+  {
+    id: "RFI-042",
+    subject: "KingsRE Tower Lobby - Ceiling Height Clash",
+    contractor: "Apex Builders",
+    discipline: "Architectural",
+    status: "Open",
+    dateSubmitted: "2026-02-22"
+  },
+  {
+    id: "RFI-043",
+    subject: "KingsRE Villas - Alternate Flooring Material",
+    contractor: "Desert Stone LLC",
+    discipline: "Civil",
+    status: "Closed",
+    dateSubmitted: "2026-02-20"
+  },
+  {
+    id: "RFI-044",
+    subject: "Basement Parking - Chiller Pipe Routing",
+    contractor: "CoolTech MEP",
+    discipline: "MEP",
+    status: "Open",
+    dateSubmitted: "2026-02-23"
+  }
+];
