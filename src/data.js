@@ -49,3 +49,30 @@ export const projectRFIs = [
     dateSubmitted: "2026-02-23"
   }
 ];
+// The new Site Issues Database
+export const siteIssues = [
+  {
+    id: "NCR-099",
+    title: "Cracked concrete slab on Podium Level 2",
+    type: "Quality",
+    severity: "High",
+    status: "Open",
+    assignedTo: "Apex Builders"
+  },
+  {
+    id: "SAF-012",
+    title: "Missing edge protection near elevator shaft",
+    type: "Safety",
+    severity: "Critical",
+    status: "Resolved",
+    assignedTo: "Safety Officer"
+  },
+  {
+    id: "NCR-100",
+    title: "HVAC Duct clash with plumbing in Corridor B",
+    type: "Coordination",
+    severity: "Medium",
+    status: "Open",
+    assignedTo: "CoolTech MEP"
+  }
+];

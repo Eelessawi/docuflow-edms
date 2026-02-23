@@ -1,13 +1,18 @@
 import { useState } from 'react';
 import './index.css';
-// 1. We import BOTH arrays from your data file
-import { incomingDocuments, projectRFIs } from './data.js'; 
+import { incomingDocuments, projectRFIs, siteIssues } from './data.js'; 
 
 function App() {
-  const [activeTab, setActiveTab] = useState('transmittals'); 
+  const [activeTab, setActiveTab] = useState('dashboard'); // Let's make Dashboard the default screen!
   const [documents, setDocuments] = useState(incomingDocuments);
-  // 2. We set up a new Whiteboard space specifically for RFIs
   const [rfis, setRfis] = useState(projectRFIs); 
+  const [issues, setIssues] = useState(siteIssues); 
+
+  // 🧮 THE CALCULATOR: Automatically counting our live metrics
+  const pendingDocsCount = documents.filter(doc => doc.status === 'Pending Routing').length;
+  const openRfiCount = rfis.filter(rfi => rfi.status === 'Open').length;
+  const openIssuesCount = issues.filter(issue => issue.status === 'Open').length;
+  const criticalIssuesCount = issues.filter(issue => issue.status === 'Open' && issue.severity === 'Critical').length;
 
   // Engine for Submittals
   function updateDocumentStatus(docId, newStatus) {
@@ -27,6 +32,15 @@ function App() {
     setRfis(updatedRfis);
   }
 
+  // Engine for Issues
+  function resolveIssue(issueId) {
+    const updatedIssues = issues.map(issue => {
+      if (issue.id === issueId) return { ...issue, status: 'Resolved' };
+      return issue;
+    });
+    setIssues(updatedIssues);
+  }
+
   return (
     <div style={{ display: 'flex', height: '100vh', backgroundColor: '#f3f4f6', fontFamily: 'system-ui' }}>
       
@@ -44,10 +58,42 @@ function App() {
       {/* MAIN CONTENT AREA */}
       <div style={{ flex: 1, padding: '40px', overflowY: 'auto' }}>
         <h1 style={{ color: '#111827', marginBottom: '5px', textTransform: 'capitalize' }}>
-          {activeTab === 'transmittals' ? 'Submittals' : activeTab === 'rfis' ? 'Digital RFIs' : activeTab} Overview
+          {activeTab === 'transmittals' ? 'Submittals' : activeTab === 'rfis' ? 'Digital RFIs' : activeTab === 'issues' ? 'Site Issues' : 'Executive Dashboard'}
         </h1>
         
-        {/* --- 🪄 CONDITIONAL RENDER: SUBMITTALS --- */}
+        {/* --- 🪄 CONDITIONAL RENDER: DASHBOARD --- */}
+        {activeTab === 'dashboard' && (
+          <div style={{ marginTop: '30px' }}>
+            <p style={{ color: '#6b7280', marginBottom: '20px' }}>Real-time project metrics for KingsRE Management.</p>
+            
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '20px' }}>
+              
+              {/* Stat Card 1: Submittals */}
+              <div style={{ backgroundColor: 'white', padding: '25px', borderRadius: '8px', boxShadow: '0 2px 4px rgba(0,0,0,0.05)', borderTop: '4px solid #3b82f6' }}>
+                <h3 style={{ color: '#6b7280', margin: '0 0 10px 0', fontSize: '1rem' }}>Pending Submittals</h3>
+                <p style={{ fontSize: '2.5rem', fontWeight: 'bold', margin: '0', color: '#1f2937' }}>{pendingDocsCount}</p>
+              </div>
+
+              {/* Stat Card 2: RFIs */}
+              <div style={{ backgroundColor: 'white', padding: '25px', borderRadius: '8px', boxShadow: '0 2px 4px rgba(0,0,0,0.05)', borderTop: '4px solid #f59e0b' }}>
+                <h3 style={{ color: '#6b7280', margin: '0 0 10px 0', fontSize: '1rem' }}>Open RFIs</h3>
+                <p style={{ fontSize: '2.5rem', fontWeight: 'bold', margin: '0', color: '#1f2937' }}>{openRfiCount}</p>
+              </div>
+
+              {/* Stat Card 3: Issues */}
+              <div style={{ backgroundColor: 'white', padding: '25px', borderRadius: '8px', boxShadow: '0 2px 4px rgba(0,0,0,0.05)', borderTop: criticalIssuesCount > 0 ? '4px solid #ef4444' : '4px solid #10b981' }}>
+                <h3 style={{ color: '#6b7280', margin: '0 0 10px 0', fontSize: '1rem' }}>Open Site Issues</h3>
+                <p style={{ fontSize: '2.5rem', fontWeight: 'bold', margin: '0', color: '#1f2937' }}>{openIssuesCount}</p>
+                {criticalIssuesCount > 0 && (
+                  <p style={{ color: '#ef4444', margin: '10px 0 0 0', fontSize: '0.85rem', fontWeight: 'bold' }}>⚠️ {criticalIssuesCount} Critical Defect(s)</p>
+                )}
+              </div>
+
+            </div>
+          </div>
+        )}
+
+        {/* --- CONDITIONAL RENDER: SUBMITTALS --- */}
         {activeTab === 'transmittals' && (
           <div style={{ display: 'flex', flexDirection: 'column', gap: '15px', marginTop: '30px' }}>
             {documents.map(doc => (
@@ -57,7 +103,7 @@ function App() {
                   <p style={{ margin: '0', color: '#6b7280', fontSize: '0.9rem' }}>ID: {doc.id} | Discipline: {doc.discipline}</p>
                 </div>
                 <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '10px' }}>
-                  <span style={{ backgroundColor: doc.status === 'Approved' ? '#d1fae5' : doc.status === 'Rejected' ? '#fee2e2' : '#fef3c7', color: doc.status === 'Approved' ? '#065f46' : doc.status === 'Rejected' ? '#991b1b' : '#d97706', padding: '5px 12px', borderRadius: '20px', fontSize: '0.85rem', fontWeight: 'bold' }}>{doc.status}</span>
+                  <span style={{ backgroundColor: doc.status.includes('Approved') ? '#d1fae5' : doc.status === 'Rejected' ? '#fee2e2' : '#fef3c7', color: doc.status.includes('Approved') ? '#065f46' : doc.status === 'Rejected' ? '#991b1b' : '#d97706', padding: '5px 12px', borderRadius: '20px', fontSize: '0.85rem', fontWeight: 'bold' }}>{doc.status}</span>
                   <div style={{ display: 'flex', gap: '5px' }}>
                     <button onClick={() => updateDocumentStatus(doc.id, 'Approved')} style={{ padding: '5px 10px', fontSize: '0.8rem', backgroundColor: '#10b981', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer' }}>Approve</button>
                     <button onClick={() => updateDocumentStatus(doc.id, 'Approved w/ Comments')} style={{ padding: '5px 10px', fontSize: '0.8rem', backgroundColor: '#f59e0b', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer' }}>w/ Comments</button>
@@ -69,7 +115,7 @@ function App() {
           </div>
         )}
 
-        {/* --- 🪄 CONDITIONAL RENDER: RFIs --- */}
+        {/* --- CONDITIONAL RENDER: RFIs --- */}
         {activeTab === 'rfis' && (
           <div style={{ display: 'flex', flexDirection: 'column', gap: '15px', marginTop: '30px' }}>
             {rfis.map(rfi => (
@@ -89,11 +135,25 @@ function App() {
           </div>
         )}
 
-        {/* --- 🪄 CONDITIONAL RENDER: DASHBOARD --- */}
-        {activeTab === 'dashboard' && (
-          <div style={{ marginTop: '30px', padding: '30px', backgroundColor: 'white', borderRadius: '8px', textAlign: 'center', color: '#6b7280' }}>
-            <h2 style={{ color: '#1f2937' }}>Analytics Dashboard</h2>
-            <p>We will build out the live charts and project metrics here in Step 4!</p>
+        {/* --- CONDITIONAL RENDER: SITE ISSUES --- */}
+        {activeTab === 'issues' && (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '15px', marginTop: '30px' }}>
+            {issues.map(issue => (
+              <div key={issue.id} style={{ backgroundColor: 'white', padding: '20px', borderRadius: '8px', borderLeft: issue.severity === 'Critical' ? '5px solid #7f1d1d' : issue.severity === 'High' ? '5px solid #ef4444' : '5px solid #f59e0b', boxShadow: '0 2px 4px rgba(0,0,0,0.05)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <div>
+                  <h3 style={{ margin: '0 0 5px 0', color: '#1f2937' }}>{issue.title}</h3>
+                  <p style={{ margin: '0', color: '#6b7280', fontSize: '0.9rem' }}>
+                    ID: {issue.id} | Type: <strong>{issue.type}</strong> | Assigned: {issue.assignedTo}
+                  </p>
+                </div>
+                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '10px' }}>
+                  <span style={{ backgroundColor: issue.status === 'Open' ? '#fee2e2' : '#d1fae5', color: issue.status === 'Open' ? '#991b1b' : '#065f46', padding: '5px 12px', borderRadius: '20px', fontSize: '0.85rem', fontWeight: 'bold' }}>{issue.status}</span>
+                  {issue.status === 'Open' && (
+                    <button onClick={() => resolveIssue(issue.id)} style={{ padding: '5px 15px', fontSize: '0.85rem', backgroundColor: '#10b981', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer' }}>Mark Resolved</button>
+                  )}
+                </div>
+              </div>
+            ))}
           </div>
         )}
 
