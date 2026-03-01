@@ -1,13 +1,26 @@
-import { useState } from 'react';
+// App.jsx
+import { useState, useEffect } from 'react';
 import './index.css';
 import { incomingDocuments, projectRFIs, siteIssues } from './data.js'; 
 
 function App() {
-  const [activeTab, setActiveTab] = useState('dashboard'); // Let's make Dashboard the default screen!
+  const [activeTab, setActiveTab] = useState('dashboard');
   const [documents, setDocuments] = useState(incomingDocuments);
-  const [rfis, setRfis] = useState(projectRFIs); 
   const [issues, setIssues] = useState(siteIssues); 
-  const [newRfiSubject, setNewRfiSubject] = useState(' ');
+  const [newRfiSubject, setNewRfiSubject] = useState(''); 
+
+  // 🧠 THE SMART MEMORY: Check the hard drive for RFIs first!
+  const [rfis, setRfis] = useState(() => {
+    const savedRfis = localStorage.getItem('DocuFlow_RFIs');
+    
+    // If we have saved RFIs, translate them from text to an array
+    if (savedRfis !== null) {
+      return JSON.parse(savedRfis);
+    }
+    
+    // If the hard drive is empty, load the default dummy data!
+    return projectRFIs; 
+  });
 
   // 🧮 THE CALCULATOR: Automatically counting our live metrics
   const pendingDocsCount = documents.filter(doc => doc.status === 'Pending Routing').length;
@@ -24,7 +37,7 @@ function App() {
     setDocuments(updatedDocs);
   }
 
-  // Engine for RFIs
+  // Engine for Closing RFIs
   function closeRFI(rfiId) {
     const updatedRfis = rfis.map(rfi => {
       if (rfi.id === rfiId) return { ...rfi, status: 'Closed' };
@@ -33,7 +46,7 @@ function App() {
     setRfis(updatedRfis);
   }
 
-  // Engine for Issues
+  // Engine for Resolving Issues
   function resolveIssue(issueId) {
     const updatedIssues = issues.map(issue => {
       if (issue.id === issueId) return { ...issue, status: 'Resolved' };
@@ -47,23 +60,27 @@ function App() {
     // 1. If the scratchpad is empty, don't do anything!
     if (newRfiSubject.trim() === '') return;
 
-    // 2. Create the new RFI Object (The new Manila Folder)
+    // 2. Create the new RFI Object
     const newRfiObject = {
-      id: `RFI-09${rfis.length + 1}`, // Generate a fake ID (e.g., RFI-094)
-      subject: newRfiSubject,         // Grab the exact text from the Scratchpad!
+      id: `RFI-09${rfis.length + 1}`,
+      subject: newRfiSubject,
       contractor: "Site Inspector",
       discipline: "General",
       status: "Open",
-      dateSubmitted: "2026-02-23"
+      dateSubmitted: "2026-02-23" 
     };
 
     // 3. Put the new folder into the main filing cabinet
-    // The [...rfis] part means "keep all the old RFIs, and add this new one to the end"
     setRfis([...rfis, newRfiObject]);
 
-    // 4. Erase the scratchpad so the input box goes blank again
+    // 4. Erase the scratchpad
     setNewRfiSubject('');
   }
+
+  // 🚚 THE COURIER: Save RFIs to the hard drive whenever they change!
+  useEffect(() => {
+    localStorage.setItem('DocuFlow_RFIs', JSON.stringify(rfis));
+  }, [rfis]);
 
 
   return (
@@ -86,26 +103,22 @@ function App() {
           {activeTab === 'transmittals' ? 'Submittals' : activeTab === 'rfis' ? 'Digital RFIs' : activeTab === 'issues' ? 'Site Issues' : 'Executive Dashboard'}
         </h1>
         
-        {/* --- 🪄 CONDITIONAL RENDER: DASHBOARD --- */}
+        {/* --- CONDITIONAL RENDER: DASHBOARD --- */}
         {activeTab === 'dashboard' && (
           <div style={{ marginTop: '30px' }}>
             <p style={{ color: '#6b7280', marginBottom: '20px' }}>Real-time project metrics for KingsRE Management.</p>
             
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '20px' }}>
-              
-              {/* Stat Card 1: Submittals */}
               <div style={{ backgroundColor: 'white', padding: '25px', borderRadius: '8px', boxShadow: '0 2px 4px rgba(0,0,0,0.05)', borderTop: '4px solid #3b82f6' }}>
                 <h3 style={{ color: '#6b7280', margin: '0 0 10px 0', fontSize: '1rem' }}>Pending Submittals</h3>
                 <p style={{ fontSize: '2.5rem', fontWeight: 'bold', margin: '0', color: '#1f2937' }}>{pendingDocsCount}</p>
               </div>
 
-              {/* Stat Card 2: RFIs */}
               <div style={{ backgroundColor: 'white', padding: '25px', borderRadius: '8px', boxShadow: '0 2px 4px rgba(0,0,0,0.05)', borderTop: '4px solid #f59e0b' }}>
                 <h3 style={{ color: '#6b7280', margin: '0 0 10px 0', fontSize: '1rem' }}>Open RFIs</h3>
                 <p style={{ fontSize: '2.5rem', fontWeight: 'bold', margin: '0', color: '#1f2937' }}>{openRfiCount}</p>
               </div>
 
-              {/* Stat Card 3: Issues */}
               <div style={{ backgroundColor: 'white', padding: '25px', borderRadius: '8px', boxShadow: '0 2px 4px rgba(0,0,0,0.05)', borderTop: criticalIssuesCount > 0 ? '4px solid #ef4444' : '4px solid #10b981' }}>
                 <h3 style={{ color: '#6b7280', margin: '0 0 10px 0', fontSize: '1rem' }}>Open Site Issues</h3>
                 <p style={{ fontSize: '2.5rem', fontWeight: 'bold', margin: '0', color: '#1f2937' }}>{openIssuesCount}</p>
@@ -113,7 +126,6 @@ function App() {
                   <p style={{ color: '#ef4444', margin: '10px 0 0 0', fontSize: '0.85rem', fontWeight: 'bold' }}>⚠️ {criticalIssuesCount} Critical Defect(s)</p>
                 )}
               </div>
-
             </div>
           </div>
         )}
@@ -143,40 +155,25 @@ function App() {
         {/* --- CONDITIONAL RENDER: RFIs --- */}
         {activeTab === 'rfis' && (
           <div style={{ display: 'flex', flexDirection: 'column', gap: '15px', marginTop: '30px' }}>
-            {/* THE NEW RFI FORM AREA */}
-          <div style={{ backgroundColor: 'white', padding: '20px', borderRadius: '8px', marginBottom: '20px', border: '1px solid #e5e7eb' }}>
-            <h3 style={{ marginTop: '0' }}>Create New RFI</h3>
             
-            <input 
-              type="text" 
-              placeholder="What is the issue on site?" 
-              value={newRfiSubject} 
-              onChange={(event) => setNewRfiSubject(event.target.value)} 
-              style={{ width: '100%', padding: '10px', borderRadius: '4px', border: '1px solid #d1d5db', marginBottom: '10px' }}
-            />
-            
-            {/* This paragraph is just to prove our Scratchpad is working! */}
- {/* THE NEW RFI FORM AREA */}
-          <div style={{ backgroundColor: 'white', padding: '20px', borderRadius: '8px', marginBottom: '20px', border: '1px solid #e5e7eb' }}>
-            <h3 style={{ marginTop: '0' }}>Create New RFI</h3>
-            
-            <input 
-              type="text" 
-              placeholder="What is the issue on site?" 
-              value={newRfiSubject} 
-              onChange={(event) => setNewRfiSubject(event.target.value)} 
-              style={{ width: '100%', padding: '10px', borderRadius: '4px', border: '1px solid #d1d5db', marginBottom: '10px' }}
-            />
-            
-            {/* THE NEW BUTTON THAT REPLACED THE PARAGRAPH 👇 */}
-            <button 
-              onClick={submitNewRfi} 
-              style={{ padding: '10px 15px', backgroundColor: '#3b82f6', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer', fontWeight: 'bold' }}>
-              Submit New RFI
-            </button>
+            {/* THE NEW RFI FORM AREA (Cleaned up: No more duplicate!) */}
+            <div style={{ backgroundColor: 'white', padding: '20px', borderRadius: '8px', marginBottom: '20px', border: '1px solid #e5e7eb' }}>
+              <h3 style={{ marginTop: '0' }}>Create New RFI</h3>
+              <input 
+                type="text" 
+                placeholder="What is the issue on site?" 
+                value={newRfiSubject} 
+                onChange={(event) => setNewRfiSubject(event.target.value)} 
+                style={{ width: '100%', padding: '10px', borderRadius: '4px', border: '1px solid #d1d5db', marginBottom: '10px' }}
+              />
+              <button 
+                onClick={submitNewRfi} 
+                style={{ padding: '10px 15px', backgroundColor: '#3b82f6', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer', fontWeight: 'bold' }}>
+                Submit New RFI
+              </button>
+            </div>
 
-          </div>
-          </div>
+            {/* THE LIST OF RFIs */}
             {rfis.map(rfi => (
               <div key={rfi.id} style={{ backgroundColor: 'white', padding: '20px', borderRadius: '8px', borderLeft: rfi.status === 'Open' ? '5px solid #ef4444' : '5px solid #10b981', boxShadow: '0 2px 4px rgba(0,0,0,0.05)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                 <div>
